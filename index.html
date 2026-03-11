@@ -1,14 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Countdown</title>
-</head>
-<body>
-    <h1>Countdown</h1>
-    <p>Some content here...</p>
-    <a href="Countdown2April14.html">Open Countdown Page (HTML)</a>
-    <p>More content here...</p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Countdown to 14 April 2026</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0f172a;
+        color: #e5e7eb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .container {
+        background: #111827;
+        padding: 20px 24px;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        max-width: 420px;
+        width: 100%;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin: 0 0 10px;
+        text-align: center;
+        color: #f9fafb;
+      }
+      .subtitle {
+        font-size: 0.9rem;
+        text-align: center;
+        margin-bottom: 16px;
+        color: #9ca3af;
+      }
+      .time-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        color: #9ca3af;
+      }
+      .cards {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .card {
+        background: #020617;
+        border-radius: 10px;
+        padding: 10px 12px;
+        border: 1px solid #1f2937;
+      }
+      .label {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        margin-bottom: 4px;
+      }
+      .value {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #e5e7eb;
+      }
+      .note {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 10px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Countdown to 14 April 2026</h1>
+      <!-- updated subtitle -->
+      <div class="subtitle">Total days, weekdays, and WFH days (Mon + Tue)</div>
+
+      <div class="time-row">
+        <div>Current time:</div>
+        <div id="currentTime"></div>
+      </div>
+      <div class="time-row">
+        <div>Target date:</div>
+        <div id="targetDate"></div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="label">Total days (inclusive of today & target)</div>
+          <div class="value" id="totalDays">–</div>
+        </div>
+
+        <!-- label and id changed from Mondays to weekdays -->
+        <div class="card">
+          <div class="label">Total weekdays (Mon–Fri) in this period</div>
+          <div class="value" id="weekdays">–</div>
+        </div>
+
+        <div class="card">
+          <div class="label">Total work-from-home days (Mon + Tue)</div>
+          <div class="value" id="wfhDays">–</div>
+        </div>
+      </div>
+
+      <div class="note">
+        Calculated from your browser's local date/time.
+      </div>
+    </div>
+
+    <script>
+      // Target date: year, monthIndex (0 = Jan, so 3 = April), day
+      const TARGET_DATE = new Date(2026, 3, 14);
+
+      function formatDateTime(dt) {
+        const pad = n => String(n).padStart(2, "0");
+        const yyyy = dt.getFullYear();
+        const mm = pad(dt.getMonth() + 1);
+        const dd = pad(dt.getDate());
+        const hh = pad(dt.getHours());
+        const mi = pad(dt.getMinutes());
+        const ss = pad(dt.getSeconds());
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+      }
+
+      function formatDateOnly(dt) {
+        const pad = n => String(n).padStart(2, "0");
+        const yyyy = dt.getFullYear();
+        const mm = pad(dt.getMonth() + 1);
+        const dd = pad(dt.getDate());
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      function calculateCounts() {
+        const now = new Date();
+
+        // Normalize to local "date only" for today (no time component)
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Normalize target the same way
+        const target = new Date(
+          TARGET_DATE.getFullYear(),
+          TARGET_DATE.getMonth(),
+          TARGET_DATE.getDate()
+        );
+
+        if (today > target) {
+          return { totalDays: 0, weekdays: 0, wfhDays: 0 };
+        }
+
+        let totalDays = 0;
+        let weekdays = 0; // was mondays
+        let wfhDays = 0;
+
+        // Loop from today through target (inclusive)
+        for (let d = new Date(today); d <= target; d.setDate(d.getDate() + 1)) {
+          totalDays++;
+          const weekday = d.getDay(); // Sunday = 0, Monday = 1, Tuesday = 2, ...
+
+          // Count all weekdays Mon–Fri as weekdays
+          if (weekday >= 1 && weekday <= 5) {
+            weekdays++;
+          }
+
+          // WFH: Monday + Tuesday
+          if (weekday === 1 || weekday === 2) {
+            wfhDays++;
+          }
+        }
+
+        return { totalDays, weekdays, wfhDays };
+      }
+
+      function updateUI() {
+        const now = new Date();
+        const { totalDays, weekdays, wfhDays } = calculateCounts();
+
+        document.getElementById("currentTime").textContent = formatDateTime(now);
+        document.getElementById("targetDate").textContent = formatDateOnly(TARGET_DATE);
+
+        document.getElementById("totalDays").textContent = totalDays;
+        document.getElementById("weekdays").textContent = weekdays; // updated id
+        document.getElementById("wfhDays").textContent = wfhDays;
+      }
+
+      // Initial render
+      updateUI();
+      // Update every second
+      setInterval(updateUI, 1000);
+    </script>
+
+    <a href="Countdown.docx" download>Download Countdown Page</a>
+  </body>
 </html>
